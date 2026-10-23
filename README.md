@@ -26,7 +26,7 @@ npm run preview      # http://localhost:4173
 マイク（録音）は **HTTPS か localhost** でしか使えません。
 
 - 同じ Wi‑Fi のスマホから試す: `npm run dev:lan`（自己署名証明書の HTTPS で起動）。表示される `https://<PCのIP>:5173` をスマホで開き、証明書の警告を許可します。
-- 毎日使う: 静的ファイル（`dist/`）を HTTPS のホスティング（Vercel / GitHub Pages / Cloudflare Pages など）に置き、スマホで開いて「ホーム画面に追加」。※公開作業はまだ行っていません。
+- 毎日使う: **https://r0ze998.github.io/crypto-english/** をスマホで開いて「ホーム画面に追加」。`main` に push すると GitHub Actions がテスト・ビルドして `gh-pages` ブランチに公開します。
 
 ## 練習の流れ
 
