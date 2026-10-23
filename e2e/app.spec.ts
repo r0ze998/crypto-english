@@ -6,8 +6,20 @@ async function shot(page: Page, name: string) {
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
 }
 
+/** ネイティブのダイアログは使わない（出たら失敗にする） */
 function autoDialogs(page: Page) {
-  page.on('dialog', (d) => (d.type() === 'prompt' ? d.accept('削除') : d.accept()));
+  page.on('dialog', (d) => {
+    throw new Error(`native dialog: ${d.message()}`);
+  });
+}
+
+/** 画面内の確認ダイアログで OK を押す（入力が必要なら入力） */
+async function confirmInPage(page: Page, text?: string) {
+  const dlg = page.getByRole('alertdialog');
+  await expect(dlg).toBeVisible();
+  if (text) await dlg.getByRole('textbox').fill(text);
+  await dlg.getByRole('button').first().click();
+  await expect(dlg).toHaveCount(0);
 }
 
 /** 英語の声を2つ持つ偽の speechSynthesis（読み上げ内容と速度を記録する） */
@@ -166,6 +178,7 @@ test.describe('音声なし環境（実際のヘッドレス Chromium: 英語の
     await page.getByRole('button', { name: '続きから再開' }).click();
     await expect(page.getByRole('heading', { name: '2 理解チェック' })).toBeVisible();
     await page.getByRole('button', { name: '終了' }).click();
+    await confirmInPage(page);
     await expect(page.getByRole('heading', { name: '今日の練習' })).toBeVisible();
     await expect(page.getByText('続きから再開')).toHaveCount(0);
   });
@@ -183,6 +196,7 @@ test.describe('音声なし環境（実際のヘッドレス Chromium: 英語の
     const original = '  Line one, with  double spaces.\nLine two!  ';
     await page.getByLabel('原文（入力どおりに保存されます）').fill(original);
     await page.getByRole('button', { name: '原文として保存' }).click();
+    await confirmInPage(page);
     await expect(page.locator('pre.original')).toHaveCount(1);
     expect(await page.locator('pre.original').evaluate((e) => e.textContent)).toBe(original);
     await page.getByLabel('言い換えを追加').fill('Short version.');
@@ -205,6 +219,7 @@ test.describe('音声なし環境（実際のヘッドレス Chromium: 英語の
     await page.getByRole('button', { name: /■ 停止/ }).click();
     await expect(page.getByRole('button', { name: '▶ 自分' })).toBeVisible();
     await page.getByRole('button', { name: '終了' }).click();
+    await confirmInPage(page);
 
     // エクスポート（録音込み）
     await page.goto('/#/settings');
@@ -219,6 +234,7 @@ test.describe('音声なし環境（実際のヘッドレス Chromium: 英語の
 
     // 全削除
     await page.getByRole('button', { name: 'すべてのデータを削除' }).click();
+    await confirmInPage(page, '削除');
     await expect(page.getByText('すべて削除しました')).toBeVisible();
     await page.goto('/#/phrases');
     await expect(page.getByText('0 件')).toBeVisible();
@@ -227,6 +243,7 @@ test.describe('音声なし環境（実際のヘッドレス Chromium: 英語の
     await page.goto('/#/settings');
     await page.getByRole('button', { name: 'すべて置き換え' }).click();
     await page.getByLabel('バックアップファイルを選択').setInputFiles(path);
+    await confirmInPage(page);
     await expect(page.getByText(/置き換えました（表現 1 件・記録 \d+ 件・録音 1 件）/)).toBeVisible();
     await page.reload();
     await expect(page.getByText(/録音 1 件/)).toBeVisible();

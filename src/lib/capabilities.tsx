@@ -3,6 +3,7 @@ import { chooseDefaultVoice, isTtsSupported, loadEnglishVoices, type VoiceInfo }
 import { recordingSupport } from './recorder';
 import { recognitionCtor } from './stt';
 import { useStore } from './store';
+import { inArtifactFrame } from './host';
 
 export interface Capabilities {
   ttsApi: boolean;
@@ -50,7 +51,7 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
       voices,
       canSpeak: isTtsSupported() && voices.length > 0 && !state.settings.textOnly,
       recording: recordingSupport(),
-      sttApi: !!recognitionCtor(),
+      sttApi: !!recognitionCtor() && !inArtifactFrame(),
       youVoice,
       partnerVoice,
     };

@@ -6,6 +6,7 @@ import { PROJECT_FIELDS } from '../lib/state';
 import { addDays, dayKey } from '../lib/date';
 import type { ActiveSession } from '../components/steps/types';
 import { useCaps } from '../lib/capabilities';
+import { useConfirm } from '../components/Confirm';
 
 const COURSES: { m: Minutes; desc: string }[] = [
   { m: 10, desc: '復習（あれば最大3件）＋ 1場面: 聞く → 理解 → まねる・置き換え → 追加質問1つ → 保存' },
@@ -26,6 +27,7 @@ export function HomePage({
 }) {
   const { state } = useStore();
   const caps = useCaps();
+  const confirm = useConfirm();
   const [first, setFirst] = useState('');
   const due = dueItems(state);
   const confirmed = PROJECT_FIELDS.filter((f) => state.project[f.key].status === 'confirmed').length;
@@ -53,8 +55,8 @@ export function HomePage({
             <button
               type="button"
               className="btn btn-ghost"
-              onClick={() => {
-                if (window.confirm('途中の練習を破棄しますか？（保存済みの表現は残ります）')) onDiscard();
+              onClick={async () => {
+                if (await confirm({ message: '途中の練習を破棄しますか？（保存済みの表現は残ります）', confirmLabel: '破棄する', danger: true })) onDiscard();
               }}
             >
               破棄

@@ -17,6 +17,7 @@ import { SaveStep } from '../components/steps/SaveStep';
 import { FluencyStep } from '../components/steps/FluencyStep';
 import { ReviewDeck } from '../components/ReviewDeck';
 import { PitchPractice } from '../components/PitchPractice';
+import { useConfirm } from '../components/Confirm';
 
 export const ACTIVE_KEY = 'crypto-english:active-session';
 
@@ -107,6 +108,7 @@ export function SessionPage({ initial, onExit }: { initial: ActiveSession; onExi
   const step: Step = steps[Math.min(a.step, steps.length - 1)];
   const finalized = useRef(false);
   const topRef = useRef<HTMLDivElement>(null);
+  const confirm = useConfirm();
 
   // 進行状況を保存（途中でタブが閉じても再開できる）
   useEffect(() => {
@@ -144,8 +146,8 @@ export function SessionPage({ initial, onExit }: { initial: ActiveSession; onExi
     setA((x) => ({ ...x, runs: { ...x.runs, [sceneId]: fn(x.runs[sceneId]) } }));
   }, []);
 
-  const quit = () => {
-    if (!window.confirm('練習を終了しますか？ここまでの記録は保存されます。')) return;
+  const quit = async () => {
+    if (!(await confirm({ message: '練習を終了しますか？ここまでの記録は保存されます。', confirmLabel: '終了する' }))) return;
     cancelSpeech();
     if (!finalized.current && a.activeSeconds >= 20) update((s) => finalize(s, a, false));
     finalized.current = true;

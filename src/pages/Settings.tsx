@@ -8,12 +8,15 @@ import { cancelSpeech, speak } from '../lib/tts';
 import { dayKey } from '../lib/date';
 import { SpeedControl } from '../components/audio';
 import { clearActive } from './Session';
+import { useConfirm } from '../components/Confirm';
+import { saveFile } from '../lib/host';
 
 export function SettingsPage() {
   const { state, update } = useStore();
   const caps = useCaps();
   const set = (patch: Partial<Settings>) => update((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
   const st = state.settings;
+  const confirm = useConfirm();
 
   const testVoice = (uri?: string) => {
     cancelSpeech();
@@ -88,9 +91,10 @@ export function SettingsPage() {
             <input
               type="checkbox"
               checked={st.speechRecognition}
-              onChange={(e) => {
-                if (e.target.checked && !window.confirm('音声認識を有効にすると、使ったときに声が外部サーバーへ送られる可能性があります。有効にしますか？')) return;
-                set({ speechRecognition: e.target.checked });
+              onChange={async (e) => {
+                const on = e.target.checked;
+                if (on && !(await confirm({ message: '音声認識を有効にすると、使ったときに声が外部サーバーへ送られる可能性があります。有効にしますか？', confirmLabel: '有効にする' }))) return;
+                set({ speechRecognition: on });
               }}
             />
             音声認識を使う（外部送信の可能性あり）
@@ -191,6 +195,7 @@ function DataSection() {
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const [recCount, setRecCount] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const confirm = useConfirm();
 
   useEffect(() => {
     navigator.storage?.estimate?.().then((e) => {
@@ -208,13 +213,10 @@ function DataSection() {
       const recs = withRec ? await listRecordings() : undefined;
       const backup = await buildBackup(state, recs);
       const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `crypto-english-backup-${dayKey()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      if ((await saveFile(`crypto-english-backup-${dayKey()}.json`, blob)) === 'declined') {
+        setMsg('保存をキャンセルしました');
+        return;
+      }
       setMsg(`エクスポートしました（表現 ${state.phrases.length} 件・記録 ${state.sessions.length} 件${recs ? `・録音 ${recs.length} 件` : ''}）`);
     } catch (e) {
       setErr(`エクスポートに失敗しました: ${(e as Error).message}`);
@@ -227,7 +229,7 @@ function DataSection() {
     try {
       const parsed = parseBackup(await file.text());
       if (mode === 'replace') {
-        if (!window.confirm('今のデータをすべてファイルの内容で置き換えます。よろしいですか？')) return;
+        if (!(await confirm({ message: '今のデータをすべてファイルの内容で置き換えます。よろしいですか？', confirmLabel: '置き換える', danger: true }))) return;
         replace(parsed.state);
         if (parsed.recordings.length) {
           await clearRecordings();
@@ -314,7 +316,7 @@ function DataSection() {
         type="button"
         className="btn btn-ghost danger"
         onClick={async () => {
-          if (window.prompt('すべての練習データと録音を削除します。確認のため「削除」と入力してください。') !== '削除') return;
+          if (!(await confirm({ message: 'すべての練習データと録音を削除します。', requireText: '削除', confirmLabel: '削除する', danger: true }))) return;
           replace(defaultState());
           clearActive();
           await clearRecordings().catch(() => {});

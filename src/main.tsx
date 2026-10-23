@@ -3,13 +3,16 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { StoreProvider } from './lib/store';
 import { CapabilitiesProvider } from './lib/capabilities';
+import { ConfirmProvider } from './components/Confirm';
 import './styles.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <StoreProvider>
       <CapabilitiesProvider>
-        <App />
+        <ConfirmProvider>
+          <App />
+        </ConfirmProvider>
       </CapabilitiesProvider>
     </StoreProvider>
   </StrictMode>,

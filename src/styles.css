@@ -17,11 +17,11 @@
   --partner: #f1f5f9;
   --now: #fde68a;
   --radius: 12px;
-  color-scheme: light dark;
+  --ai: #7c3aed;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #0f1720;
     --surface: #17212c;
     --surface-2: #1f2b38;
@@ -39,7 +39,31 @@
     --you: #0c2a3d;
     --partner: #1c2733;
     --now: #4a3b0a;
+  
+    color-scheme: dark;
   }
+}
+
+:root[data-theme='dark'] {
+    --bg: #0f1720;
+    --surface: #17212c;
+    --surface-2: #1f2b38;
+    --text: #e6edf3;
+    --muted: #9aa8b8;
+    --line: #2c3a4a;
+    --accent: #5eead4;
+    --accent-text: #062b27;
+    --accent-soft: #134e4a;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --warn-soft: #3a2f10;
+    --err: #f87171;
+    --rec: #f87171;
+    --you: #0c2a3d;
+    --partner: #1c2733;
+    --now: #4a3b0a;
+  
+  color-scheme: dark;
 }
 
 * {
@@ -83,8 +107,9 @@ h4 {
 .wrap {
   max-width: 680px;
   margin: 0 auto;
-  padding: 12px 16px 32px;
-  padding-top: max(12px, env(safe-area-inset-top));
+  padding-block: 12px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 .with-nav {
   padding-bottom: calc(88px + env(safe-area-inset-bottom));
@@ -237,6 +262,11 @@ button {
 .btn-marked {
   background: var(--now);
 }
+.btn-danger {
+  background: var(--err);
+  border-color: var(--err);
+  color: var(--surface);
+}
 .danger {
   color: var(--err);
   border-color: var(--err);
@@ -352,8 +382,8 @@ select {
   border-color: var(--warn);
 }
 .badge-ai {
-  color: #7c3aed;
-  border-color: #7c3aed;
+  color: var(--ai);
+  border-color: var(--ai);
 }
 
 /* ホーム */
@@ -520,7 +550,7 @@ select {
   background: var(--partner);
 }
 .ai {
-  border-color: #7c3aed;
+  border-color: var(--ai);
 }
 .ai-bubble {
   border-top: 1px dashed var(--line);
@@ -660,7 +690,9 @@ select {
   grid-template-columns: repeat(5, 1fr);
   background: var(--surface);
   border-top: 1px solid var(--line);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   z-index: 20;
 }
 .tab {

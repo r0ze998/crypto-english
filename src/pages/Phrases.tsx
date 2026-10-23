@@ -5,6 +5,7 @@ import { addPhrases } from '../lib/phrases';
 import { dayKey } from '../lib/date';
 import type { SavedPhrase } from '../lib/state';
 import { PlayButton } from '../components/audio';
+import { useConfirm } from '../components/Confirm';
 
 function Editor({ p, onDone }: { p: SavedPhrase; onDone: () => void }) {
   const { update } = useStore();
@@ -52,6 +53,7 @@ export function PhrasesPage() {
   const { state, update } = useStore();
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
+  const confirm = useConfirm();
   const [en, setEn] = useState('');
   const [ja, setJa] = useState('');
   const today = dayKey();
@@ -129,8 +131,8 @@ export function PhrasesPage() {
                   <button
                     type="button"
                     className="btn-small btn-ghost"
-                    onClick={() => {
-                      if (window.confirm(`「${p.en}」を削除しますか？`)) update((s) => ({ ...s, phrases: s.phrases.filter((x) => x.id !== p.id) }));
+                    onClick={async () => {
+                      if (await confirm({ message: `「${p.en}」を削除しますか？`, confirmLabel: '削除する', danger: true })) update((s) => ({ ...s, phrases: s.phrases.filter((x) => x.id !== p.id) }));
                     }}
                   >
                     削除

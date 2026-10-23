@@ -4,6 +4,7 @@ import { PROJECT_FIELDS, type FactStatus, type Paraphrase, type PitchOriginal } 
 import { createOriginal } from '../lib/pitch';
 import { uid } from '../lib/date';
 import { PitchPractice } from '../components/PitchPractice';
+import { useConfirm } from '../components/Confirm';
 
 const STATUS_LABEL: Record<FactStatus, string> = {
   unprovided: '未提供',
@@ -79,11 +80,12 @@ function Pitch() {
   const [label, setLabel] = useState('0xARK pitch');
   const [busy, setBusy] = useState(false);
   const [practice, setPractice] = useState<string | null>(null);
+  const confirm = useConfirm();
   const originals = state.pitch.originals;
 
   const saveOriginal = async () => {
     if (!draft.trim()) return;
-    if (!window.confirm('この文章を「原文」として保存します。保存後はアプリ内で編集できません（削除と新しい版の追加のみ）。よろしいですか？')) return;
+    if (!(await confirm({ message: 'この文章を「原文」として保存します。保存後はアプリ内で編集できません（削除と新しい版の追加のみ）。よろしいですか？', confirmLabel: '原文として保存' }))) return;
     setBusy(true);
     const o = await createOriginal(draft, label.trim() || 'pitch');
     update((s) => ({ ...s, pitch: { ...s.pitch, originals: [...s.pitch.originals, o] } }));
@@ -91,9 +93,8 @@ function Pitch() {
     setBusy(false);
   };
 
-  const removeOriginal = (o: PitchOriginal) => {
-    const typed = window.prompt(`原文「${o.label}」と、その言い換えを削除します。確認のため「削除」と入力してください。`);
-    if (typed !== '削除') return;
+  const removeOriginal = async (o: PitchOriginal) => {
+    if (!(await confirm({ message: `原文「${o.label}」と、その言い換えを削除します。`, requireText: '削除', confirmLabel: '削除する', danger: true }))) return;
     update((s) => ({
       ...s,
       pitch: { originals: s.pitch.originals.filter((x) => x.id !== o.id), paraphrases: s.pitch.paraphrases.filter((p) => p.pitchId !== o.id) },

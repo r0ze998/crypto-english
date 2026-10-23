@@ -1,8 +1,11 @@
+import { inArtifactFrame } from './host';
+
 // 録音（MediaRecorder）。ボタンを押したときだけマイクを開き、停止したら
 // マイクのトラックをすぐ閉じる。録音データは端末内にだけ保存する。
 
 export function recordingSupport(): { ok: boolean; reasonJa?: string } {
   if (typeof window === 'undefined') return { ok: false, reasonJa: 'ブラウザ外' };
+  if (inArtifactFrame()) return { ok: false, reasonJa: 'この埋め込み表示ではマイクを使えません。録音は GitHub Pages 版などブラウザで直接開いたときに使えます' };
   if (!window.isSecureContext) return { ok: false, reasonJa: 'HTTPS（または localhost）で開いたときだけマイクを使えます' };
   if (!navigator.mediaDevices?.getUserMedia) return { ok: false, reasonJa: 'このブラウザはマイク入力に対応していません' };
   if (typeof MediaRecorder === 'undefined') return { ok: false, reasonJa: 'このブラウザは録音（MediaRecorder）に対応していません' };
